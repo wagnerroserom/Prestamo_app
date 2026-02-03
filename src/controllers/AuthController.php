@@ -6,6 +6,7 @@ class AuthController {
         $this->pdo = $pdo;
     }
 
+    // === MÉTODOS PARA REGISTRO ===
     public function showRegister() {
         include '../views/auth/register.php';
     }
@@ -21,16 +22,16 @@ class AuthController {
         $contrasena = $_POST['contrasena'] ?? '';
 
         if (empty($nombre) || empty($correo) || empty($pais) || empty($celular) || empty($usuario) || empty($contrasena)) {
-            echo "<p style='color:red'>Todos los campos son obligatorios.</p>";
-            $this->showRegister();
+            $error = "Todos los campos son obligatorios.";
+            include '../views/auth/register.php';
             return;
         }
 
         $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM usuarios WHERE usuario = ? OR correo = ?");
         $stmt->execute([$usuario, $correo]);
         if ($stmt->fetchColumn() > 0) {
-            echo "<p style='color:red'>Usuario o correo ya registrado.</p>";
-            $this->showRegister();
+            $error = "Usuario o correo ya registrado.";
+            include '../views/auth/register.php';
             return;
         }
 
@@ -43,11 +44,13 @@ class AuthController {
             header("Location: /public/index.php?action=login&msg=registered");
             exit;
         } else {
-            echo "<p style='color:red'>Error al registrar. Intente nuevamente.</p>";
-            $this->showRegister();
+            $error = "Error al registrar. Intente nuevamente.";
+            include '../views/auth/register.php';
+            return;
         }
     }
 
+    // === LOGIN Y LOGOUT ===
     public function loginProcess() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
         
@@ -55,7 +58,7 @@ class AuthController {
         $contrasena = $_POST['contrasena'] ?? '';
 
         if (empty($usuario) || empty($contrasena)) {
-            echo "<p style='color:red'>Complete todos los campos.</p>";
+            $error = "Complete todos los campos.";
             include '../views/auth/login.php';
             return;
         }
@@ -65,7 +68,6 @@ class AuthController {
         $user = $stmt->fetch();
 
         if ($user && password_verify($contrasena, $user['contrasena'])) {
-            session_start();
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['usuario'] = $user['usuario'];
             $_SESSION['rol'] = $user['rol'];
@@ -77,13 +79,13 @@ class AuthController {
             }
             exit;
         } else {
-            echo "<p style='color:red'>Credenciales inválidas.</p>";
+            $error = "Credenciales inválidas.";
             include '../views/auth/login.php';
+            return;
         }
     }
 
     public function logout() {
-        session_start();
         session_destroy();
         header("Location: /public/index.php?action=login");
         exit;

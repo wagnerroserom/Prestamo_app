@@ -121,9 +121,10 @@ class LoanController {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    // ✅ CORREGIDO: sin session_start()
     public function createLoanAsAdmin() {
-        session_start();
-        if (!isset($_SESSION['user_id']) || $_SESSION['rol'] !== 'administrador') {
+        // La sesión ya está activa (iniciada en index.php)
+        if (!isset($_SESSION['user_id']) || ($_SESSION['rol'] ?? '') !== 'administrador') {
             die("Acceso denegado.");
         }
 
@@ -162,6 +163,7 @@ class LoanController {
                 $fila['total_pagar']
             ]);
         }
+
         header("Location: /public/index.php?action=admin_panel&msg=created");
         exit;
     }
@@ -193,7 +195,7 @@ class LoanController {
         $amortizacion = $this->calcularPrestamo($input);
 
         $this->pdo->prepare("DELETE FROM amortizacion_detalle WHERE prestamo_id = ?")
-                    ->execute([$data['id']]);
+                  ->execute([$data['id']]);
 
         $stmtDet = $this->pdo->prepare("
             INSERT INTO amortizacion_detalle 
@@ -211,6 +213,7 @@ class LoanController {
                 $fila['total_pagar']
             ]);
         }
+
         header("Location: /public/index.php?action=admin_panel&msg=updated");
         exit;
     }
