@@ -193,7 +193,7 @@ class LoanController {
         $amortizacion = $this->calcularPrestamo($input);
 
         $this->pdo->prepare("DELETE FROM amortizacion_detalle WHERE prestamo_id = ?")
-                  ->execute([$data['id']]);
+                    ->execute([$data['id']]);
 
         $stmtDet = $this->pdo->prepare("
             INSERT INTO amortizacion_detalle 
